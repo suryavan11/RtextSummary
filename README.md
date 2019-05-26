@@ -40,7 +40,7 @@ Fit the model
 
     summary.model$fit(traindf$doctxt)
     
-Save the model if needed for future use
+Save the model for future use
 
     saveRDS(summary.model, path.to.file)
     
