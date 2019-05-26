@@ -59,7 +59,7 @@ Explore the weights to find the right threshold
     quantile(testdf_sentence_level$wt, seq(0,1,0.1))
     
 Get text summary. topN sentences that have weights above weight_threshold are included in the summary
-The irrelevant sentences can be replaced by replace_char (use replace_char = '' to delete the irrelevant sentences) 
+The irrelevant sentences can be replaced by replace_char (use replace_char = "" to delete the irrelevant sentences) 
 
     testdf_summary = summary.model$transform(testdf,
                                              doc_id = 'docid',  
