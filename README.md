@@ -26,8 +26,8 @@ Any other columns are passed through without any changes.
     testdf 
     
 Preprocess text: lowercase, clean etc as needed. 
-After preprocessing, the only puncutation present in the text should be periods that define the end of sentences
-Some example preprocessing code is below
+After preprocessing, the only puncutation present in the text should be periods that define the end of sentences.
+Some examples for preprocessing code are below
 
     traindf$doctxt = str_replace_all( str_to_lower(traindf$doctxt),'[^a-z. ]','' )
     testdf$doctxt = str_replace_all( str_to_lower(testdf$doctxt),'[^a-z. ]','' )
