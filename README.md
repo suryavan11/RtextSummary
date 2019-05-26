@@ -19,7 +19,8 @@ This package has two primary functions, `fit`, that fits GloVe word vectors and 
     library(stringr) ### vectorized string conversions
     
     # read train and test datasets into the respective dataframes. 
-    # the dataframes should have columns for document ids and document text. Any other columns are passed through without any changes  
+    # the dataframes should have columns for document ids and document text. 
+    # Any other columns are passed through without any changes  
     traindf  
     testdf 
     
@@ -39,7 +40,8 @@ This package has two primary functions, `fit`, that fits GloVe word vectors and 
     # save the model for future use
     saveRDS(summary.model, path.to.file)
     
-    # get sentence-level summary for new data. topN, weight_threshold, replace_char values are not used if return_sentences = T 
+    # get sentence-level summary for new data. 
+    # topN, weight_threshold, replace_char values are not used if return_sentences = T 
     testdf_sentence_level = summary.model$transform(testdf, 
                                                     doc_id = 'docid', 
                                                     txt_col = 'doctxt',
