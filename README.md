@@ -4,9 +4,7 @@ This package summarizes documents by extracting relevant sentences
 
 ### Installation
 
-This package is not yet available on CRAN.  
-
-To install the development version of this package, use `devtools`:
+This package is not yet available on CRAN. To install the development version of this package, use `devtools`:
 
     devtools::install_github('suryavan11/RtextSummary')
     
@@ -17,7 +15,54 @@ This package has two primary functions, `fit`, that fits GloVe word vectors and 
 
 ### Examples
 
-
+    library(RtextSummary)
+    library(stringr) ### vectorized string conversions
+    
+    # read train and test datasets into the respective dataframes. 
+    # the dataframes should have columns for document ids and document text. Any other columns are passed through without any changes  
+    traindf  
+    testdf 
+    
+    # preprocess text: lowercase, clean etc as needed. 
+    # After preprocessing, the only puncutation present in the text should be periods that define the end of sentences
+    # some example preprocessing code is below
+    traindf$doctxt = str_replace_all( str_to_lower(traindf$doctxt),'[^a-z. ]','' )
+    testdf$doctxt = str_replace_all( str_to_lower(testdf$doctxt),'[^a-z. ]','' )
+    
+    # initialize a new class
+    # the default stopword list 'stopwords_longlist' provided with the package is used below.  
+    summary.model = TextSummary$new( RtextSummary::stopwords_longlist )
+    
+    # fit the model
+    summary.model$fit(traindf$doctxt)
+    
+    # save the model for future use
+    saveRDS(summary.model, path.to.file)
+    
+    # get sentence-level summary for new data. topN, weight_threshold, replace_char values are not used if return_sentences = T 
+    testdf_sentence_level = summary.model$transform(testdf, 
+                                                    doc_id = 'docid', 
+                                                    txt_col = 'doctxt',
+                                                    summary_col = 'summary',
+                                                    return_sentences = T
+                                                    )
+                             
+    # explore the weights to find the right threshold
+    quantile(testdf_sentence_level$wt, seq(0,1,0.1))
+    
+    # get text summaries. topN sentences that have weights above weight_threshold are included in the summary
+    # the irrelevant sentences can be replaced by replace_char (use replace_char = '' to delete the irrelevant sentences) 
+    testdf_summary = summary.model$transform(testdf,
+                                             doc_id = 'docid',  
+                                             txt_col = 'doctxt',
+                                             summary_col = 'summary',
+                                             topN = 4,
+                                             weight_threshold=quantile(testdf_sentence_level$wt, 0.6 ),
+                                             return_sentences = F,
+                                             replace_char = '.'
+                                             )
+    
+    
 ### Additional comments
 --------
 
