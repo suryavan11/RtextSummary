@@ -16,11 +16,12 @@ This package has two primary functions, `fit`, that fits GloVe word vectors and 
 ### Examples
 
     library(RtextSummary)
-    library(stringr) ### vectorized string conversions
+    library(stringr)
     
-    # read train and test datasets into the respective dataframes. 
-    # the dataframes should have columns for document ids and document text. 
-    # Any other columns are passed through without any changes  
+read train and test datasets into the respective dataframes. 
+the dataframes should have columns for document ids and document text. 
+Any other columns are passed through without any changes  
+
     traindf  
     testdf 
     
