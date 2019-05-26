@@ -18,31 +18,34 @@ This package has two primary functions, `fit`, that fits GloVe word vectors and 
     library(RtextSummary)
     library(stringr)
     
-read train and test datasets into the respective dataframes. 
-the dataframes should have columns for document ids and document text. 
-Any other columns are passed through without any changes  
+Read train and test datasets into the respective dataframes. 
+The dataframes should have columns for document ids and document text. 
+Any other columns are passed through without any changes.  
 
     traindf  
     testdf 
     
-    # preprocess text: lowercase, clean etc as needed. 
-    # After preprocessing, the only puncutation present in the text should be periods that define the end of sentences
-    # some example preprocessing code is below
+Preprocess text: lowercase, clean etc as needed. 
+After preprocessing, the only puncutation present in the text should be periods that define the end of sentences
+Some example preprocessing code is below
     traindf$doctxt = str_replace_all( str_to_lower(traindf$doctxt),'[^a-z. ]','' )
     testdf$doctxt = str_replace_all( str_to_lower(testdf$doctxt),'[^a-z. ]','' )
     
-    # initialize a new class
-    # the default stopword list 'stopwords_longlist' provided with the package is used below.  
+Initialize a new class. The default stopword list 'stopwords_longlist' provided with the package is used below.
+
     summary.model = TextSummary$new( RtextSummary::stopwords_longlist )
     
-    # fit the model
+Fit the model
+
     summary.model$fit(traindf$doctxt)
     
-    # save the model for future use
+Save the model if needed for future use
+
     saveRDS(summary.model, path.to.file)
     
-    # get sentence-level summary for new data. 
-    # topN, weight_threshold, replace_char values are not used if return_sentences = T 
+Get sentence-level summary for new data. 
+topN, weight_threshold, replace_char values are not used if return_sentences = T 
+
     testdf_sentence_level = summary.model$transform(testdf, 
                                                     doc_id = 'docid', 
                                                     txt_col = 'doctxt',
@@ -50,11 +53,13 @@ Any other columns are passed through without any changes
                                                     return_sentences = T
                                                     )
                              
-    # explore the weights to find the right threshold
+Explore the weights to find the right threshold
+
     quantile(testdf_sentence_level$wt, seq(0,1,0.1))
     
-    # get text summaries. topN sentences that have weights above weight_threshold are included in the summary
-    # the irrelevant sentences can be replaced by replace_char (use replace_char = '' to delete the irrelevant sentences) 
+Get text summary. topN sentences that have weights above weight_threshold are included in the summary
+The irrelevant sentences can be replaced by replace_char (use replace_char = '' to delete the irrelevant sentences) 
+
     testdf_summary = summary.model$transform(testdf,
                                              doc_id = 'docid',  
                                              txt_col = 'doctxt',
