@@ -1,0 +1,12 @@
+Package: RtextSummary
+Type: Package
+Title: summarizes text by extracting relevant sentences
+Version: 0.1.0
+Author: Abhijit Suryavanshi
+Maintainer: Abhijit Suryavanshi <yourself@somewhere.net>
+Description: class for text summary model. The training dataset consists of documents, each document should consist of multiple sentences separated by a period. During the model fit, GloVe word vectors and TfIdf are calculated at the document level. While applying the model on new data, an l2-norm of TfIdf-weighted average of GloVe word vectors for each sentence is calculated. The output can be either at the sentence level (sentences and weights are returned) or at a document level (the summary for each document is returned). It is useful to first get a sentence level output and plot a histogram of the sentence weights to determine a cutoff threshold for the weights. This threshold can then be used in the document level output
+License: GPL-3
+Encoding: UTF-8
+LazyData: false
+Imports: R6, mlapi, stringr, tidyr, tokenizers, text2vec, dplyr
+RoxygenNote: 6.1.0
