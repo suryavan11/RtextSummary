@@ -5,7 +5,7 @@ Version: 0.1.0
 Authors@R: c(
 	person("Suryavanshi", "Abhijit", role = c("aut", "cre"),
 		  email = "abhi.surya@gmail.com")  )
-Description: class for text summary model. The training dataset consists of documents, each document should consist of multiple sentences separated by a period. During the model fit, GloVe word vectors and TfIdf are calculated at the document level. While applying the model on new data, an l2-norm of TfIdf-weighted average of GloVe word vectors for each sentence is calculated. The output can be either at the sentence level (sentences and weights are returned) or at a document level (the summary for each document is returned). It is useful to first get a sentence level output and plot a histogram of the sentence weights to determine a cutoff threshold for the weights. This threshold can then be used in the document level output
+Description: This package summarizes text by extracting relevant sentences. The training dataset should consist of several documents, each document should have sentences separated by a period. While fitting the model, GloVe word vectors and TfIdf are calculated at the document level. While applying the model on new data, an l2-norm of TfIdf-weighted average of GloVe word vectors for each sentence is calculated. The output can be either at the sentence level (sentences and weights are returned) or at a document level (the summary for each document is returned). It is useful to first get a sentence level output and plot a histogram of the sentence weights to determine a cutoff threshold for the weights. This threshold can then be used in the document level output.
 License: GPL-3
 Encoding: UTF-8
 LazyData: false
