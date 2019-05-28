@@ -1,14 +1,82 @@
 #' @name TextSummary
-#' @title summarizes text by extracting relevant sentences
-#' @description class for text summary model.
-#' the training dataset should consist of several documents, each document should have sentences separated by a period
-#' during the model fit, GloVe word vectors and TfIdf are calculated at the document level
-#' while applying the model on new data, an l2-norm of TfIdf-weighted average of GloVe word vectors for each sentence is calculated
-#' the output can be either at the sentence level (sentences and weights are returned) or at a document level (the summary for each document is returned)  
-#' it is useful to first get a sentence level output and plot a histogram of the sentence weights to determine a cutoff threshold for the weights
-#' This threshold can then be used in the document level output
+#' @title TextSummary
+#' @description This package summarizes text by extracting relevant sentences.
+#' The training dataset should consist of several documents, each document should have sentences separated by a period.
+#' While fitting the model, GloVe word vectors and TfIdf are calculated at the document level.
+#' While applying the model on new data, an l2-norm of TfIdf-weighted average of GloVe word vectors for each sentence is calculated.
+#' The output can be either at the sentence level (sentences and weights are returned) or at a document level (the summary for each document is returned).  
+#' It is useful to first get a sentence level output and plot a histogram of the sentence weights to determine a cutoff threshold for the weights.
+#' This threshold can then be used in the document level output.
 #' @format \code{\link{R6Class}} object.
+#' @section Usage:
+#' For usage details see \bold{Methods, Arguments and Examples} sections.
+#' \preformatted{
+#' TextSummaryModel = TextSummary$new( stopword_list = RtextSummary::stopword_longlist )
+#' TextSummaryModel$fit(x)
+#' TextSummaryModel$transform(df,doc_id, txt_col,summary_col,topN=3,weight_threshold=10, return_sentences = FALSE,replace_char = '',avg_weight_by_word_count = TRUE)
+#' }
+#' @section Methods:
+#' \describe{
+#'   \item{\code{$new( stopword_list = RtextSummary::stopword_longlist )}}{Creates TextSummary model}
+#'   \item{\code{$fit(x)}}{fit model to an input vector (dataframe column) of documents}
+#'   \item{\code{$transform(df,doc_id, txt_col,summary_col,topN=3,weight_threshold=10, return_sentences = FALSE,replace_char = '',avg_weight_by_word_count = TRUE)}}{transform new data \code{df} using the model built on train data}
+#' }
+#' @section Arguments:
+#' \describe{
+#'  \item{TextSummaryModel}{A \code{TextSummary} object}
+#'  \item{x}{An input vector (dataframe column) of documents, preprocessed as necessary to remove case, puncutation etc (except periods that indicate sentence boundaries) }
+#'  \item{df}{dataframe containing document ids and documents. Any other columns are passed through without any changes }
+#'  \item{doc_id}{column name that contains the document ids }
+#'  \item{txt_col}{column name that contains the document text }
+#'  \item{summary_col}{column name for the output summary. This column will be added to \code{df} }
+#'  \item{topN}{top N sentences to keep in the output }
+#'  \item{weight_threshold}{threshold above which sentences are considered for inclusion in the summary  }
+#'  \item{return_sentences}{\code{TRUE}: returns sentences and their weights. \code{topN}, \code{weight_threshold} and \code{replace_char} are ignored
+#'  \code{FALSE}: \code{topN} sentences that have weights above \code{weight_threshold} are included in the summary. 
+#'  }
+#'  \item{replace_char}{The irrelevant sentences are replaced by \code{replace_char} (use \code{replace_char = ""} to completely remove the irrelevant sentences) }
+#'  \item{avg_weight_by_word_count}{if \code{TRUE}: the sentence weights are divided by number of words in the sentence.  }
+#' }
+#' @examples
+#' library(RtextSummary)
+#' library(stringr)
+#' library(tidyr)
+#' library(dplyr)
 #' 
+#' data("opinosis")
+#' opinosis$text = stringr::str_replace_all(
+#'   stringr::str_to_lower(opinosis$text),'[^a-z. ]','' )
+#' 
+#' # the model will be fit at the sentence level
+#' tempdf = opinosis%>%
+#'   tidyr::separate_rows(text, sep = '\\.')
+#' 
+#' summary.model = TextSummary$new( stopword_list = c() )
+#' summary.model$fit(tempdf$text)
+#' df_sentence_level = summary.model$transform(
+#'   opinosis,
+#'   doc_id = 'topics',
+#'   txt_col = 'text',
+#'   summary_col = 'summary',
+#'   return_sentences = TRUE,
+#'   avg_weight_by_word_count = TRUE
+#' )
+#'  
+#' # explore weight thresholds
+#' quantile(df_sentence_level$wt, seq(0,1,0.1))
+#' 
+#' 
+#' df_summary = summary.model$transform(
+#'   opinosis,
+#'   doc_id = 'topics',
+#'   txt_col = 'text',
+#'   summary_col = 'summary',
+#'   topN = 1,
+#'   weight_threshold=quantile(df_sentence_level$wt, 0.3 ),
+#'   return_sentences = FALSE,
+#'   replace_char = '',
+#'   avg_weight_by_word_count = TRUE
+#' )
 #' @import mlapi
 #' @importFrom tokenizers tokenize_word_stems
 #' @import text2vec
@@ -16,23 +84,10 @@
 #' @import stringr
 #' @import tidyr
 #' @import dplyr
-#'
 #' @export TextSummary
-#' @export stopwords_longlist
-#' @export tokenize.fn
-#' 
 
-setwd('C:/Users/ASuryav1/OneDrive - T-Mobile USA/Abhi R packages/RtextSummary')
 
-stopwords_longlist =  readLines('data/stopwords_longlist.txt') ## stopwords::stopwords()## 
-
-tokenize.fn <- function(x, stopwords.list) {
-  tokens = x%>%tokenizers::tokenize_word_stems(stopwords =  stopwords.list ) ## stopwords::stopwords('en')) 
-  tokens = lapply(tokens,function(x) x[nchar(x)>2])
-  tokens = lapply(tokens,function(x) x[nchar(x)<= 20]) 
-  tokens = lapply(tokens,function(x) x[!x %in% stopwords.list])
-  return(tokens)
-}
+# setwd('C:/Users/ASuryav1/OneDrive - T-Mobile USA/Abhi R packages/RtextSummary')
 
 TextSummary = R6::R6Class(
   "TextSummary",
@@ -53,7 +108,7 @@ TextSummary = R6::R6Class(
 
         'tfidf.norm' = 'none',
 
-        'glove.remove.stopwords' = T,
+        'glove.remove.stopwords' = TRUE,
         'glove.skip.grams.window' = 100, ## 100
         'glove.word.vectors.size' = 50,
         'glove.x.max' = 10,
@@ -80,7 +135,7 @@ TextSummary = R6::R6Class(
         text2vec::fit_transform(model_tfidf)
 
 
-      if(private$control.param$glove.remove.stopwords == T) {
+      if(private$control.param$glove.remove.stopwords == TRUE) {
         glove.it = it
         glove.vocab = vocab
         glove.vectorizer = vectorizer
@@ -115,7 +170,7 @@ TextSummary = R6::R6Class(
 
 
 
-      if(private$control.param$glove.remove.stopwords == F) {
+      if(private$control.param$glove.remove.stopwords == FALSE) {
         common_terms = intersect(colnames(dtm_tfidf), rownames(wv) )
         word_vectors = wv[common_terms,]
       }
@@ -139,8 +194,8 @@ TextSummary = R6::R6Class(
     },
 
     transform = function(df,doc_id, txt_col,summary_col,topN=3,
-                         weight_threshold=10, return_sentences = F,
-                         replace_char = '', ...) {
+                         weight_threshold=10, return_sentences = FALSE,
+                         replace_char = '', avg_weight_by_word_count = TRUE, ...) {
       
       if (private$fitted) {
         # stopifnot(ncol(x) == ncol(private$components_))
@@ -160,16 +215,25 @@ TextSummary = R6::R6Class(
         sent_vectors = dtm_averaged %*% self$word_vectors[common_terms, ]
         df$wt = as.numeric(apply( sent_vectors, 1,function(x) norm(x, type="2") ))
         
+        if(avg_weight_by_word_count == TRUE) {
+          tmp = unlist(lapply(
+            str_split(str_trim(df[[txt_col]]), "\\s+"),length )
+            )
+          df$wt = df$wt/tmp
+        }
+
         df1 = df%>%
           dplyr::group_by(!!as.name(doc_id))%>%
           dplyr::mutate(rn = row_number(), wt.rn = dense_rank(-wt) )%>%
           dplyr::mutate(!!as.name(summary_col) := ifelse(wt.rn<=topN & wt > weight_threshold,!!as.name(txt_col), 
                                                   stringr::str_replace_all(!!as.name(txt_col),'.',replace_char) ))%>%
+          dplyr::mutate(!!as.name(summary_col) := ifelse(!!as.name(summary_col) == '', !!as.name(summary_col), str_c( str_trim(!!as.name(summary_col)), '. ') ) )%>%
           dplyr::summarize(!!as.name(txt_col) := paste0(!!as.name(txt_col),  collapse = '. '), 
-                    !!as.name(summary_col) := paste0(!!as.name(summary_col),  collapse = '. ') )%>%
+                    !!as.name(summary_col) := paste0(!!as.name(summary_col),  collapse = '') )%>%
           ungroup()
         
-        if (return_sentences == F){
+       
+        if (return_sentences == FALSE){
         df2 = df_orig%>%
           dplyr::left_join(df1%>%dplyr::select(!!as.name(doc_id), !!as.name(summary_col)), by = doc_id)
         } else {
@@ -209,53 +273,15 @@ TextSummary = R6::R6Class(
 
 
 
-# setwd('C:/Users/ASuryav1/OneDrive - T-Mobile USA/Abhi R packages/RtextSummary')
-# 
-# library(R6)
-# library(mlapi)
-# library(RODBC)
-# library(sqldf)
-# library(readr) ### file read write functions
-# library(lubridate)  ### date
-# library(stringr) ### vectorized string conversions
-# library(tidyr) ### data manipulation
-# library(magrittr) ### pipes
-# library(tokenizers)
-# library(text2vec)
-# library(dplyr) ### piping and chaining operations. Load this package last as it is widely used and has some conflicts with other packages, especially plyr
-# 
-# source("R/utils.R" ) 
-# 
-# # fastload <- odbcConnect("apph mining") #
-# # sqlt <- function(sql_text){
-# #   return( sqlQuery(fastload ,sql_text ,as.is = TRUE ,stringsAsFactors=FALSE) )
-# # }
-# # 
-# # testdf = sqlt("select top 1000 * from bi_mining.lw_msg_jan19 
-# # where sentby = 'CONSUMER'
-# # order by conversationid")
-# 
-# # write_csv(testdf, 'sample_chats_20190524.csv')
-# 
-# testdf = read_csv( 'sample_chats_20190524.csv')
-#  
-# 
-# modeldf = testdf
-# modeldf$msg = str_replace_all(modeldf$msg,';','\\.')
-# modeldf$msg = str_replace_all( str_to_lower(modeldf$msg),'[^a-z. ]','' )
-# modeldf$msg = str_replace_all( str_trim(modeldf$msg),'\\s+',' ' )
-# 
-# 
-# summary.model = TextSummary$new( stopwords_longlist )
-# 
-# ## TextSummary$debug("fit_transform")
-# ## debug(summary.model$fit)
-# summary.model$fit(modeldf$msg)
-# 
-# df_final = summary.model$transform(modeldf, 'conversationID', 'msg',
-#                                    'summary',3,10, return_sent = F)
-# 
-# ## undebug(summary.model$fit_transform)
-# ## TextSummary$undebug("transform")
-# ## summary.model$.__enclos_env__$private$wv_context
+tokenize.fn <- function(x, stopwords.list) {
+  tokens = x%>%tokenizers::tokenize_word_stems(stopwords =  stopwords.list ) ## stopwords::stopwords('en')) 
+  tokens = lapply(tokens,function(x) x[nchar(x)>2])
+  tokens = lapply(tokens,function(x) x[nchar(x)<= 20]) 
+  tokens = lapply(tokens,function(x) x[!x %in% stopwords.list])
+  return(tokens)
+}
+
+
+
+
 
