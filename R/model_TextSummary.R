@@ -1,6 +1,6 @@
 #' @name TextSummary
 #' @title TextSummary
-#' @description This package summarizes text by extracting relevant sentences.
+#' @description Build a text summary by extracting relevant sentences from your text.
 #' The training dataset should consist of several documents, each document should have sentences separated by a period.
 #' While fitting the model, glove word vectors and tfidf are calculated at the document level.
 #' While applying the model on new data, an l2-norm of tfidf-weighted average of glove word vectors for each sentence is calculated.
