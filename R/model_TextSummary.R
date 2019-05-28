@@ -2,8 +2,8 @@
 #' @title TextSummary
 #' @description This package summarizes text by extracting relevant sentences.
 #' The training dataset should consist of several documents, each document should have sentences separated by a period.
-#' While fitting the model, GloVe word vectors and TfIdf are calculated at the document level.
-#' While applying the model on new data, an l2-norm of TfIdf-weighted average of GloVe word vectors for each sentence is calculated.
+#' While fitting the model, glove word vectors and tfidf are calculated at the document level.
+#' While applying the model on new data, an l2-norm of tfidf-weighted average of glove word vectors for each sentence is calculated.
 #' The output can be either at the sentence level (sentences and weights are returned) or at a document level (the summary for each document is returned).  
 #' It is useful to first get a sentence level output and plot a histogram of the sentence weights to determine a cutoff threshold for the weights.
 #' This threshold can then be used in the document level output.
@@ -38,6 +38,7 @@
 #'  \item{avg_weight_by_word_count}{if \code{TRUE}: the sentence weights are divided by number of words in the sentence.  }
 #' }
 #' @examples
+#' \dontrun{ 
 #' library(RtextSummary)
 #' library(stringr)
 #' library(tidyr)
@@ -77,6 +78,7 @@
 #'   replace_char = '',
 #'   avg_weight_by_word_count = TRUE
 #' )
+#' }
 #' @import mlapi
 #' @importFrom tokenizers tokenize_word_stems
 #' @import text2vec
