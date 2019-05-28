@@ -6,7 +6,8 @@
 #' While applying the model on new data, an l2-norm of tfidf-weighted average of glove word vectors for each sentence is calculated.
 #' The output can be either at the sentence level (sentences and weights are returned) or at a document level (the summary for each document is returned).  
 #' It is useful to first get a sentence level output and plot a histogram of the sentence weights to determine a cutoff threshold for the weights.
-#' This threshold can then be used in the document level output.
+#' This threshold can then be used in the document level output. 
+#' This method is a variation of the tfidf extractive summarization method mentioned in a review paper by Gupta (2010) <doi:10.4304/jetwi.2.3.258-268>.
 #' @format \code{\link{R6Class}} object.
 #' @section Usage:
 #' For usage details see \bold{Methods, Arguments and Examples} sections.
