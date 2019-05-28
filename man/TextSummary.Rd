@@ -9,12 +9,12 @@
 TextSummary
 }
 \description{
-summarizes text by extracting relevant sentences.
-the training dataset should consist of several documents, each document should have sentences separated by a period.
-While fitting the model, GloVe word vectors and TfIdf are calculated at the document level.
-while applying the model on new data, an l2-norm of TfIdf-weighted average of GloVe word vectors for each sentence is calculated.
-the output can be either at the sentence level (sentences and weights are returned) or at a document level (the summary for each document is returned).  
-it is useful to first get a sentence level output and plot a histogram of the sentence weights to determine a cutoff threshold for the weights.
+This package summarizes text by extracting relevant sentences.
+The training dataset should consist of several documents, each document should have sentences separated by a period.
+While fitting the model, glove word vectors and tfidf are calculated at the document level.
+While applying the model on new data, an l2-norm of tfidf-weighted average of glove word vectors for each sentence is calculated.
+The output can be either at the sentence level (sentences and weights are returned) or at a document level (the summary for each document is returned).  
+It is useful to first get a sentence level output and plot a histogram of the sentence weights to determine a cutoff threshold for the weights.
 This threshold can then be used in the document level output.
 }
 \section{Usage}{
@@ -56,8 +56,10 @@ TextSummaryModel$transform(df,doc_id, txt_col,summary_col,topN=3,weight_threshol
 }
 
 \examples{
+\dontrun{ 
 library(RtextSummary)
 library(stringr)
+library(tidyr)
 library(dplyr)
 
 data("opinosis")
@@ -94,6 +96,6 @@ df_summary = summary.model$transform(
   replace_char = '',
   avg_weight_by_word_count = TRUE
 )
-  
+}
 }
 \keyword{datasets}
