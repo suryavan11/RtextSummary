@@ -9,13 +9,16 @@
 TextSummary
 }
 \description{
-This package summarizes text by extracting relevant sentences.
+Build a text summary by extracting relevant sentences from your text.
 The training dataset should consist of several documents, each document should have sentences separated by a period.
-While fitting the model, glove word vectors and tfidf are calculated at the document level.
-While applying the model on new data, an l2-norm of tfidf-weighted average of glove word vectors for each sentence is calculated.
-The output can be either at the sentence level (sentences and weights are returned) or at a document level (the summary for each document is returned).  
+While fitting the model, the 'term frequency - inverse document frequency' (TF-IDF) matrix that reflects how important a word is to a document is calculated first.
+Then vector representations for words are obtained from the 'global vectors for word representation' algorithm (GloVe).
+While applying the model on new data, the GloVe word vectors for each word are weighted by their TF-IDF weights and averaged to give a sentence vector. 
+The magnitude of this sentence vector gives the importance of that sentence within the document.
+The output can either be at the sentence level (sentences and weights are returned) or at a document level (the summary for each document is returned).  
 It is useful to first get a sentence level output and plot a histogram of the sentence weights to determine a cutoff threshold for the weights.
-This threshold can then be used in the document level output.
+This threshold can then be used in the document level output. 
+This method is a variation of the TF-IDF extractive summarization method mentioned in a review paper by Gupta (2010) <doi:10.4304/jetwi.2.3.258-268>.
 }
 \section{Usage}{
 
@@ -56,7 +59,7 @@ TextSummaryModel$transform(df,doc_id, txt_col,summary_col,topN=3,weight_threshol
 }
 
 \examples{
-\dontrun{ 
+\donttest{ 
 library(RtextSummary)
 library(stringr)
 library(tidyr)
