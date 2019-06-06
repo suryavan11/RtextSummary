@@ -1,29 +1,33 @@
 #' @name TextSummary
 #' @title TextSummary
+#' @docType class
 #' @description Build a text summary by extracting relevant sentences from your text.
 #' The training dataset should consist of several documents, each document should have sentences separated by a period.
 #' While fitting the model, the 'term frequency - inverse document frequency' (TF-IDF) matrix that reflects how important a word is to a document is calculated first.
 #' Then vector representations for words are obtained from the 'global vectors for word representation' algorithm (GloVe).
-#' While applying the model on new data, the GloVe word vectors for each word are weighted by their TF-IDF weights and averaged to give a sentence vector. 
-#' The magnitude of this sentence vector gives the importance of that sentence within the document.
+#' While applying the model on new data, the GloVe word vectors for each word are weighted by their TF-IDF weights and averaged to give a sentence vector or a document vector. 
+#' The magnitude of this sentence vector gives the importance of that sentence within the document. 
+#' Another way to obtain the importance of the sentence is to calculate cosine similarity between the sentence vector and the document vector.
 #' The output can either be at the sentence level (sentences and weights are returned) or at a document level (the summary for each document is returned).  
-#' It is useful to first get a sentence level output and plot a histogram of the sentence weights to determine a cutoff threshold for the weights.
+#' It is useful to first get a sentence level output and get quantiles of the sentence weights to determine a cutoff threshold for the weights.
 #' This threshold can then be used in the document level output. 
 #' This method is a variation of the TF-IDF extractive summarization method mentioned in a review paper by Gupta (2010) <doi:10.4304/jetwi.2.3.258-268>.
 #' @format \code{\link{R6Class}} object.
 #' @section Usage:
 #' For usage details see \bold{Methods, Arguments and Examples} sections.
 #' \preformatted{
-#' TextSummaryModel = TextSummary$new( stopword_list = RtextSummary::stopword_longlist )
+#' TextSummaryModel <- TextSummary$new( stopword_list )
+#' 
 #' TextSummaryModel$fit(x)
+#' 
 #' TextSummaryModel$transform(df,doc_id, txt_col,summary_col,topN=3,weight_threshold=10, return_sentences = FALSE,replace_char = '',avg_weight_by_word_count = TRUE)
 #' }
 #' @section Methods:
 #' \describe{
-#'   \item{\code{$new( stopword_list = RtextSummary::stopword_longlist )}}{Creates TextSummary model}
+#'   \item{\code{$new( stopword_list )}}{Creates TextSummary model}
 #'   \item{\code{$fit(x)}}{fit model to an input vector (dataframe column) of documents}
-#'   \item{\code{$transform(df,doc_id, txt_col,summary_col,topN=3,weight_threshold=10, return_sentences = FALSE,replace_char = '',avg_weight_by_word_count = TRUE)}}{transform new data \code{df} using the model built on train data}
-#' }
+#'   \item{\code{$transform(df,doc_id, txt_col,summary_col,weight_method = c('Magnitude', 'DocSimilarity'),topN=3,weight_threshold=10, return_sentences = FALSE,replace_char = '',avg_weight_by_word_count = TRUE)}}{transform new data \code{df} using the model built on train data}
+#' } 
 #' @section Arguments:
 #' \describe{
 #'  \item{TextSummaryModel}{A \code{TextSummary} object}
@@ -32,6 +36,12 @@
 #'  \item{doc_id}{column name that contains the document ids }
 #'  \item{txt_col}{column name that contains the document text }
 #'  \item{summary_col}{column name for the output summary. This column will be added to \code{df} }
+#'  \item{weight_method}{ specifies how the sentences importance is calculated. \code{weight_method = "Magnitude"} gives the weights as the magnitude of the sentence vector. 
+#'  If \code{avg_weight_by_word_count = TRUE} then the magnitude is divided by the word count, which typically favors shorter sentences.
+#'  If \code{avg_weight_by_word_count = FALSE} then the magnitude of the sentence vector is returned, which typically favors longer sentences.
+#'  \code{weight_method = "DocSimilarity"} calculates the sentence importance as a cosine similarity between the sentence vector and the document vector.
+#'  \code{avg_weight_by_word_count} does not play a role in the "DocSimilarity" method
+#'  }
 #'  \item{topN}{top N sentences to keep in the output }
 #'  \item{weight_threshold}{threshold above which sentences are considered for inclusion in the summary  }
 #'  \item{return_sentences}{\code{TRUE}: returns sentences and their weights. \code{topN}, \code{weight_threshold} and \code{replace_char} are ignored
@@ -48,24 +58,35 @@
 #' library(dplyr)
 #' 
 #' data("opinosis")
+#' 
+#' # 'stopwords_longlist' is a very long list of stopwords. 
+#' # it is not used in this example but can be useful for other datasets
+#' data("stopwords_longlist") 
+#' 
 #' opinosis$text = stringr::str_replace_all(
 #'   stringr::str_to_lower(opinosis$text),'[^a-z. ]','' )
 #' 
-#' # the model will be fit at the sentence level
+#' # -- the model will be fit at the sentence level, which works well for this dataset
+#' # for other datasets, also try fitting at the document level by commenting out the two lines below
 #' tempdf = opinosis%>%
 #'   tidyr::separate_rows(text, sep = '\\.')
+#' # ----------------------------------------
 #' 
-#' summary.model = TextSummary$new( stopword_list = c() )
+#' summary.model = TextSummary$new( stopword_list = c() ) 
 #' summary.model$fit(tempdf$text)
+#' 
+#' # the parameters below work well for this dataset. 
+#' # For other datasets, try changing weight_method and avg_weight_by_word_count
 #' df_sentence_level = summary.model$transform(
 #'   opinosis,
 #'   doc_id = 'topics',
 #'   txt_col = 'text',
 #'   summary_col = 'summary',
+#'   weight_method = 'Magnitude', 
 #'   return_sentences = TRUE,
-#'   avg_weight_by_word_count = TRUE
+#'   avg_weight_by_word_count = TRUE 
 #' )
-#'  
+#' 
 #' # explore weight thresholds
 #' quantile(df_sentence_level$wt, seq(0,1,0.1))
 #' 
@@ -75,6 +96,7 @@
 #'   doc_id = 'topics',
 #'   txt_col = 'text',
 #'   summary_col = 'summary',
+#'   weight_method = 'Magnitude', 
 #'   topN = 1,
 #'   weight_threshold=quantile(df_sentence_level$wt, 0.3 ),
 #'   return_sentences = FALSE,
@@ -88,17 +110,17 @@
 #' @importFrom R6 R6Class
 #' @import stringr
 #' @import tidyr
+#' @import Matrix.utils
 #' @import dplyr
 #' @export TextSummary
 
-
-# setwd('C:/Users/ASuryav1/OneDrive - T-Mobile USA/Abhi R packages/RtextSummary')
 
 TextSummary = R6::R6Class(
   "TextSummary",
   inherit = mlapiDecomposition,
   public = list(
     word_vectors = NA,
+    model_dtm_tfidf = NA,
     initialize = function(stopword_list ) {
       private$fitted = FALSE
       private$stopword_list = stopword_list
@@ -186,7 +208,7 @@ TextSummary = R6::R6Class(
       private$vocab= vocab
       private$vectorizer= vectorizer
       private$model_tfidf= model_tfidf
-      private$dtm_tfidf= dtm_tfidf
+      self$model_dtm_tfidf= dtm_tfidf
       private$glove.it= glove.it
       private$glove.vocab= glove.vocab
       private$glove.vectorizer= glove.vectorizer
@@ -198,12 +220,13 @@ TextSummary = R6::R6Class(
 
     },
 
-    transform = function(df,doc_id, txt_col,summary_col,topN=3,
+    transform = function(df,doc_id, txt_col,summary_col,
+                         weight_method = c('Magnitude', 'DocSimilarity'),
+                         topN=3,
                          weight_threshold=10, return_sentences = FALSE,
                          replace_char = '', avg_weight_by_word_count = TRUE, ...) {
       
       if (private$fitted) {
-        # stopifnot(ncol(x) == ncol(private$components_))
         df_orig = df
         
         df = df%>%tidyr::separate_rows(!!txt_col, sep = "\\.", convert = FALSE)
@@ -211,13 +234,45 @@ TextSummary = R6::R6Class(
         tokens = tokenize.fn(txt.temp,private$stopword_list)
         it = text2vec::itoken(tokens, progressbar = FALSE)
         dtm = text2vec::create_dtm(it, private$vectorizer )
-        dtm_tfidf = dtm[,colnames(private$dtm_tfidf)]%>%
+        
+        ## add terms if they are present in the model but not present in the new data
+        new_terms = colnames(dtm)[!(colnames(dtm) %in% colnames(self$model_dtm_tfidf) ) ]
+        
+
+          if (length(new_terms) != 0 ) {
+            dtm_temp = dtm[,1:length(new_terms)]*0
+            colnames(dtm_temp) = new_terms
+            dtm = cbind(dtm,dtm_temp)[, colnames(self$model_dtm_tfidf)]
+            
+          } else {
+            
+            dtm = dtm[, colnames(self$model_dtm_tfidf)]
+          }
+          
+          
+        # dtm_tfidf = dtm[,colnames(self$model_dtm_tfidf)]%>%
+        #   transform(private$model_tfidf ) 
+        
+        dtm_tfidf = dtm%>%
           transform(private$model_tfidf ) 
+        
         
         ###### create sentence vectors by averaging word vectors
         common_terms = intersect(colnames(dtm_tfidf), rownames(self$word_vectors) )
         dtm_averaged = dtm_tfidf[, common_terms]
         sent_vectors = dtm_averaged %*% self$word_vectors[common_terms, ]
+        
+        
+        
+        ### create doc vectors by averaging word vectors. start with sentence level dtm and aggregate to doc level
+        dtm_tfidf_doc = Matrix.utils::aggregate.Matrix(dtm,df$topics,fun='sum')%>%
+          transform(private$model_tfidf )
+        common_terms_doc = intersect(colnames(dtm_tfidf_doc), rownames(self$word_vectors) )
+        dtm_averaged_doc = dtm_tfidf_doc[, common_terms_doc]
+        doc_vectors = dtm_averaged_doc %*% self$word_vectors[common_terms_doc, ]
+        
+        if (weight_method == 'Magnitude') {
+        ### calculate weights
         df$wt = as.numeric(apply( sent_vectors, 1,function(x) norm(x, type="2") ))
         
         if(avg_weight_by_word_count == TRUE) {
@@ -227,6 +282,22 @@ TextSummary = R6::R6Class(
           df$wt = df$wt/tmp
         }
 
+        } else if ( weight_method == 'DocSimilarity' ) {
+          
+          ## calculate document similarities between document and corresponding sentences
+          df$wt = unlist( sapply( rownames(doc_vectors), function(x) {
+            as.vector(text2vec::sim2(doc_vectors[rownames(doc_vectors) == x,,drop=F] ,
+                           sent_vectors[df$topics == x,,drop=F],
+                           method = 'cosine', norm = 'l2') )
+          }  ) )
+          
+        } else {
+          print('error: please choose weight_method and re-run')
+          df$wt = NA
+          stop()
+          
+        }
+        
         df1 = df%>%
           dplyr::group_by(!!as.name(doc_id))%>%
           dplyr::mutate(rn = row_number(), wt.rn = dense_rank(-wt) )%>%
