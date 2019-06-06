@@ -36,8 +36,8 @@ After preprocessing, the only puncutation present in the text should be periods 
 
     opinosis$text = stringr::str_replace_all(stringr::str_to_lower(opinosis$text),'[^a-z. ]','' )
 
-the model will be fit at the sentence level, which works well for this dataset
-for other datasets, also try fitting at the document level by commenting out the line below
+the model will be fit at the sentence level, which works well for this dataset.
+For other datasets, also try fitting at the document level by commenting out the line below
 
     tempdf = opinosis %>% tidyr::separate_rows(text, sep = '\\.')
 
