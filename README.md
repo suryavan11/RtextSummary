@@ -4,8 +4,7 @@ This package summarizes documents by extracting relevant sentences
 
 ### Installation
 
-This package has been submitted to CRAN but is not yet available on CRAN. 
-To install the development version of this package, use `devtools`:
+This package is available on CRAN. To install the development version of this package, use `devtools`:
 
     devtools::install_github('suryavan11/RtextSummary')
     
